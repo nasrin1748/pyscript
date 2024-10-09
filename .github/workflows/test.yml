@@ -5,20 +5,20 @@ on:
         branches:
             - main
         paths:
-            - pyscript.core/**
+            - core/**
             - .github/workflows/test.yml
 
     pull_request: # Only run on merges into main that modify certain files
         branches:
             - main
         paths:
-            - pyscript.core/**
+            - core/**
             - .github/workflows/test.yml
     workflow_dispatch:
 
 jobs:
     BuildAndTest:
-        runs-on: ubuntu-latest-8core
+        runs-on: ubuntu-latest
         env:
             MINICONDA_PYTHON_VERSION: py38
             MINICONDA_VERSION: 4.11.0
@@ -69,24 +69,12 @@ jobs:
                   make setup
 
             - name: Build
-              run: make build
-
-            - name: Integration Tests
-              #run: make test-integration-parallel
-              run: |
-                  make test-integration
+              run: make build # Integration tests run in the build step.
 
             - uses: actions/upload-artifact@v4
               with:
                   name: pyscript
                   path: |
-                      pyscript.core/dist/
+                      core/dist/
                   if-no-files-found: error
                   retention-days: 7
-
-            - uses: actions/upload-artifact@v4
-              if: success() || failure()
-              with:
-                  name: test_results
-                  path: test_results/
-                  if-no-files-found: error
