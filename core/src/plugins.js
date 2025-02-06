@@ -1,5 +1,10 @@
 // ⚠️ This file is an artifact: DO NOT MODIFY
 export default {
+    codemirror: () =>
+        import(
+            /* webpackIgnore: true */
+            "./plugins/codemirror.js"
+        ),
     ["deprecations-manager"]: () =>
         import(
             /* webpackIgnore: true */
@@ -19,6 +24,11 @@ export default {
         import(
             /* webpackIgnore: true */
             "./plugins/py-editor.js"
+        ),
+    ["py-game"]: () =>
+        import(
+            /* webpackIgnore: true */
+            "./plugins/py-game.js"
         ),
     ["py-terminal"]: () =>
         import(
