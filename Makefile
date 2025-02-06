@@ -9,10 +9,11 @@ PY_OK        := $(shell python3 -c "print(int($(PY3_VER) >= $(MIN_PY3_VER)))")
 all:
 	@echo "\nThere is no default Makefile target right now. Try:\n"
 	@echo "make setup - check your environment and install the dependencies."
+	@echo "make update - update dependencies."
 	@echo "make clean - clean up auto-generated assets."
 	@echo "make build - build PyScript."
 	@echo "make precommit-check - run the precommit checks (run eslint)."
-	@echo "make test-integration - run all integration tests sequentially."
+	@echo "make test - run all automated tests in playwright."
 	@echo "make fmt - format the code."
 	@echo "make fmt-check - check the code formatting.\n"
 
@@ -39,13 +40,12 @@ check-python:
 
 # Check the environment, install the dependencies.
 setup: check-node check-npm check-python
-	cd pyscript.core && npm install && cd ..
+	cd core && npm ci && cd ..
 ifeq ($(VIRTUAL_ENV),)
 	echo "\n\n\033[0;31mCannot install Python dependencies. Your virtualenv is not activated.\033[0m"
 	false
 else
 	python -m pip install -r requirements.txt
-	playwright install
 endif
 
 # Clean up generated assets.
@@ -55,22 +55,24 @@ clean:
 	rm -rf .pytest_cache .coverage coverage.xml
 
 # Build PyScript.
-build:
-	cd pyscript.core && npx playwright install && npm run build
+build: precommit-check
+	cd core && npx playwright install chromium && npm run build
+
+# Update the dependencies.
+update:
+	python -m pip install -r requirements.txt --upgrade
 
 # Run the precommit checks (run eslint).
 precommit-check:
 	pre-commit run --all-files
 
-# Run all integration tests sequentially.
-test-integration:
-	mkdir -p test_results
-	pytest -vv $(ARGS) pyscript.core/tests/integration/ --log-cli-level=warning --junitxml=test_results/integration.xml
+# Run all automated tests in playwright.
+test:
+	cd core && npm run test:integration
 
-# Run all integration tests in parallel.
-test-integration-parallel:
-	mkdir -p test_results
-	pytest --numprocesses auto -vv $(ARGS) pyscript.core/tests/integration/ --log-cli-level=warning --junitxml=test_results/integration.xml
+# Serve the repository with the correct headers.
+serve:
+	npx mini-coi .
 
 # Format the code.
 fmt: fmt-py
@@ -83,7 +85,6 @@ fmt-check: fmt-py-check
 # Format Python code.
 fmt-py:
 	black -l 88 --skip-string-normalization .
-	isort --profile black .
 
 # Check the format of Python code.
 fmt-py-check:
